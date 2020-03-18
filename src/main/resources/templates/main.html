@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      >
+
+<body>
+ <div>
+  <form action="/logout" method="post">
+  <input type="submit" value="Sign out"/>
+  </form>
+ </div> 
+
+
+ <div>
+        <form method="post">
+            <input type="text" name="name" placeholder="input name" />
+            <input type="text" name="prefix" placeholder="Prefix"/>
+            <button type="submit">Add</button>
+        </form>
+    </div>
+
+<div>List of subjects</div>
+<form method="post" action="filter">
+        <input type="text" name="filter"/>
+        <button type="submit">Find</button>
+    </form>
+
+<div>
+         <table border="1">
+            <tr>
+               <th>Name</th>
+               <th>Prefix</th>
+            </tr>
+            <tr th:each ="subject : ${subjects}">
+               <td th:utext="${subject.name}">...</td>
+               <td th:utext="${subject.prefix}">...</td>
+            </tr>
+         </table>
+      </div>
+
+
+</body>
+</html>
+
+
+

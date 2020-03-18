@@ -1,0 +1,210 @@
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Configuration;
+using MySql.Data.MySqlClient;
+using System.Drawing;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+
+namespace Laba9_попытка_147_
+{ 
+
+    public partial class Form1 : Form
+    {
+        private DataSet shopDs = new DataSet("secondshop");
+
+        private MySqlDataAdapter companyAdapter;
+        private MySqlDataAdapter productAdapter;
+
+        private string cnStr = "server=localhost;user id=root;password = Bottomass1375; database=secondshop;persistsecurityinfo = True";
+
+
+        private MySqlCommandBuilder sqlCBCompany;
+        private MySqlCommandBuilder sqlCBProducts;
+        public Form1()
+        {
+            InitializeComponent();
+            cnStr = ConfigurationManager.ConnectionStrings["myDBprov"].ConnectionString;
+            companyAdapter = new MySqlDataAdapter("Select * from company", cnStr);
+            productAdapter = new MySqlDataAdapter("Select * from product", cnStr);
+
+            sqlCBCompany = new MySqlCommandBuilder(companyAdapter);
+            sqlCBProducts = new MySqlCommandBuilder(productAdapter);
+
+            companyAdapter.Fill(shopDs, "Company");
+            productAdapter.Fill(shopDs, "Product");
+
+            companyGrid.DataSource = shopDs.Tables["Company"];
+            productGrid.DataSource = shopDs.Tables["Product"];
+
+            DataRelation compTOprod = new DataRelation("CompanyProduct",
+                shopDs.Tables["Company"].Columns["com_id"],
+                shopDs.Tables["Product"].Columns["pr_com_id"]);
+            shopDs.Relations.Add(compTOprod);
+
+        }
+
+        private void Form1_Load(object sender, EventArgs e)
+        {
+
+        }
+
+       
+
+        private void companyGrid_CellContentClick(object sender, DataGridViewCellEventArgs e)
+        {
+
+        }
+
+        private void productGrid_CellContentClick(object sender, DataGridViewCellEventArgs e)
+        {
+
+        }
+
+        private void updButton_Click(object sender, EventArgs e)
+        {
+            {
+                try
+                {
+                    if (productGrid.DataSource == shopDs.Tables["Product"])
+                    {
+                        companyAdapter.Update(shopDs, "Company");
+                        productAdapter.Update(shopDs, "Product");
+                        shopDs.Clear();
+                        companyAdapter.Fill(shopDs, "Company");
+                        productAdapter.Fill(shopDs, "Product");
+                    }
+                    else
+                    {
+                        throw new Exception("Редактирование невозможно");
+                    }
+
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(ex.Message);
+                }
+            }
+        }
+
+        private void prodButton_Click(object sender, EventArgs e)
+        {
+            string curCompinfo = string.Empty;
+            try
+            {
+                int compID = int.Parse(companyGrid.SelectedRows[0].Cells[0].Value.ToString());
+                DataRow[] curcomp = shopDs.Tables["Company"].Select(string.Format("com_id={0}", compID));
+                curCompinfo += string.Format("Company {0},country {1}\n",
+                    curcomp[0]["com_name"], curcomp[0]["com_country"]);
+                DataRow[] curcompProd = curcomp[0].GetChildRows(shopDs.Relations["CompanyProduct"]);
+                curCompinfo += string.Format("Number of products: {0}\n", curcompProd.Length);
+                foreach (var pr in curcompProd)
+                {
+                    curCompinfo += string.Format("----\n Product # {0}\n", pr["pr_id"]);
+                    curCompinfo += string.Format("Model name: {0}\nModel type: {1}\nModel Price: {2}\n"
+                        , pr["pr_name"], pr["pr_type"], pr["pr_price"]);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
+            MessageBox.Show(curCompinfo, "Company details");
+        }
+
+        private void viewButton_Click(object sender, EventArgs e)
+        {
+            //цена от
+            try
+            {
+                if (filterBox.Text != "")
+                {
+                    DataView priceView = new DataView(shopDs.Tables["Product"]);
+                    priceView.RowFilter = string.Format("pr_price>={0}", int.Parse(filterBox.Text));
+                    productGrid.DataSource = priceView;
+                }
+            }
+            catch(Exception ex) {
+                MessageBox.Show(ex.Message);
+            }
+            //цена после
+          /*  try
+            {
+                if (filterBoxafter.Text != "")
+                {
+                    DataView priceView = new DataView(shopDs.Tables["Product"]);
+                    priceView.RowFilter = string.Format("pr_price<={2}", int.Parse(filterBoxafter.Text));
+                    productGrid.DataSource = priceView;
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
+            */
+            //для года
+            try
+            {
+                if (filterYearBox.Text != "")
+                {
+                    DataView yearView = new DataView(shopDs.Tables["Product"]);
+                    yearView.RowFilter = string.Format("pr_year<={0}", int.Parse(filterYearBox.Text));
+                    productGrid.DataSource = yearView;
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
+        }
+
+        private void resetButton_Click(object sender, EventArgs e)
+        {
+            productGrid.DataSource = shopDs.Tables["Product"];
+        }
+
+        private void filterYearBox_TextChanged(object sender, EventArgs e)
+        {
+            
+        }
+
+        private void filterBox_TextChanged(object sender, EventArgs e)
+        {
+
+        }
+
+        private void filterBoxafter_TextChanged(object sender, EventArgs e)
+        {
+
+        }
+
+        private void DeleteButton_Click(object sender, EventArgs e)
+        {
+            foreach(DataGridViewRow row in companyGrid.SelectedRows)
+            companyGrid.Rows.Remove(row);
+        }
+
+        private void NameButton_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                if (FilterName.Text != "")
+                {
+                    DataView nameView = new DataView(shopDs.Tables["Product"]);
+                    nameView.RowFilter = string.Format("pr_name like '%{0}%'",FilterName.Text);
+                    productGrid.DataSource = nameView;
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
+        }
+
+    }
+}
+
